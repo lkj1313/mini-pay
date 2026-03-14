@@ -1,0 +1,23 @@
+{
+  "name": "mini-pay",
+  "private": true,
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --filter=api --filter=web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "turbo": "^2.8.17"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "description": ""
+}

@@ -1,0 +1,68 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Package manager artifacts
+package-lock.json
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env*.example
+
+# Build outputs and caches
+.turbo
+.next
+out
+dist
+build
+coverage
+.nyc_output
+.vercel
+*.tsbuildinfo
+
+# Runtime and temp files
+logs
+*.log
+pids
+*.pid
+*.pid.lock
+*.seed
+.temp
+.tmp
+tmp
+temp
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.classpath
+.project
+.settings/
+.c9/
+*.launch
+*.sublime-workspace
+
+# Misc
+*.pem
