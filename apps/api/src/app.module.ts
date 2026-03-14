@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaService } from './prisma.service';
-import { RedisService } from './redis.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -11,8 +11,10 @@ import { RedisService } from './redis.service';
       isGlobal: true,
       envFilePath: ['../../.env', '.env'],
     }),
+    PrismaModule,
+    RedisModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, RedisService],
+  providers: [AppService],
 })
 export class AppModule {}
