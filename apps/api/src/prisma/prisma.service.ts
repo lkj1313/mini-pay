@@ -8,7 +8,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     super({
       datasourceUrl:
         configService.get<string>('DATABASE_URL') ??
-        'postgresql://postgres:postgres@localhost:5432/mini_pay',
+        'postgresql://postgres:postgres@localhost:15432/mini_pay',
     });
   }
 
