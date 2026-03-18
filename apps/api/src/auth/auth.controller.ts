@@ -15,16 +15,25 @@ import {
 } from './auth.constants';
 import { LoginDto } from './dto/login.dto';
 import { Public } from '../common/decorators/public.decorator';
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 type AuthenticatedRequest = Request & {
   user: unknown;
 };
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @ApiOperation({ summary: '로그인' })
+  @ApiOkResponse({ description: '로그인 성공 후 세션 쿠키를 발급합니다.' })
   @Post('login')
   @HttpCode(200)
   async login(
@@ -40,12 +49,16 @@ export class AuthController {
     };
   }
 
+  @ApiCookieAuth(SESSION_COOKIE_NAME)
+  @ApiOperation({ summary: '현재 로그인 사용자 조회' })
   @Get('me')
   async me(@Req() req: AuthenticatedRequest) {
     return { user: req.user };
   }
 
   @Public()
+  @ApiOperation({ summary: '로그아웃' })
+  @ApiOkResponse({ description: '세션 쿠키를 제거합니다.' })
   @Post('logout')
   @HttpCode(200)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
