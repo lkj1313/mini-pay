@@ -20,6 +20,12 @@ enum TransactionStatus {
   CANCELED
 }
 
+enum TransactionType {
+  SELF_DEPOSIT
+  USER_TRANSFER
+  MAIN_TO_SAVINGS
+}
+
 enum WalletType {
   MAIN
   SAVINGS
@@ -58,13 +64,14 @@ model Wallet {
 model Transaction {
   id String @id @default(cuid())
 
-  fromWalletId String
+  fromWalletId String?
   toWalletId   String
 
-  fromWallet Wallet @relation("FromWallet", fields: [fromWalletId], references: [id])
+  fromWallet Wallet? @relation("FromWallet", fields: [fromWalletId], references: [id])
   toWallet   Wallet @relation("ToWallet", fields: [toWalletId], references: [id])
 
   amount      BigInt
+  type        TransactionType
   status      TransactionStatus @default(PENDING)
   description String?
   createdAt   DateTime          @default(now())
