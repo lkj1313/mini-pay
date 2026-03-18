@@ -157,7 +157,7 @@ describe('WalletService', () => {
     });
   });
 
-  it('transfers money to another user main wallet', async () => {
+  it('transfers money to another user main wallet when the sender has enough balance', async () => {
     const senderMainWallet = {
       id: 'wallet-main-1',
       type: 'MAIN',
