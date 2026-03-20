@@ -127,9 +127,7 @@ export class WalletService {
           accumulatedDepositAmount + depositAmount >
           DAILY_MAIN_WALLET_DEPOSIT_LIMIT
         ) {
-          throw new BadRequestException(
-            '1일 직접 충전 한도를 초과했습니다.',
-          );
+          throw new BadRequestException('1일 직접 충전 한도를 초과했습니다.');
         }
 
         const updatedMainWallet = await tx.wallet.update({
