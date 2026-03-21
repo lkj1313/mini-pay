@@ -8,6 +8,7 @@ import {
   QueryClient,
 } from '@tanstack/react-query';
 import { getMe } from '@/shared/api/auth';
+import { SessionStatus } from '@/widgets/session-status';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -29,10 +30,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const queryClient = new QueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: getMe,
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ['auth', 'me'],
+      queryFn: getMe,
+    });
+  } catch {
+    queryClient.setQueryData(['auth', 'me'], null);
+  }
   const dehydratedState = dehydrate(queryClient);
   return (
     <html lang="en">
@@ -41,6 +46,7 @@ export default async function RootLayout({
       >
         <AppProvider>
           <HydrationBoundary state={dehydratedState}>
+            <SessionStatus />
             {children}
           </HydrationBoundary>
         </AppProvider>

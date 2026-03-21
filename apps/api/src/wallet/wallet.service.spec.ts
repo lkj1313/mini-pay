@@ -98,9 +98,15 @@ describe('WalletService', () => {
     prisma.transaction.create.mockResolvedValue(transaction);
 
     await expect(service.depositToMainWallet('user-1', 50000)).resolves.toEqual({
-      wallet: updatedMainWallet,
-      transaction,
-      remainingDailyLimit: 2_850_000n,
+      wallet: {
+        ...updatedMainWallet,
+        balance: '51000',
+      },
+      transaction: {
+        ...transaction,
+        amount: '50000',
+      },
+      remainingDailyLimit: '2850000',
     });
   });
 
@@ -151,9 +157,18 @@ describe('WalletService', () => {
     await expect(
       service.transferMainToSavings('user-1', 30000),
     ).resolves.toEqual({
-      mainWallet: updatedMainWallet,
-      savingsWallet: updatedSavingsWallet,
-      transaction,
+      mainWallet: {
+        ...updatedMainWallet,
+        balance: '70000',
+      },
+      savingsWallet: {
+        ...updatedSavingsWallet,
+        balance: '35000',
+      },
+      transaction: {
+        ...transaction,
+        amount: '30000',
+      },
     });
   });
 
@@ -208,9 +223,18 @@ describe('WalletService', () => {
     await expect(
       service.transferToUserMainWallet('user-1', 'friend@example.com', 30000),
     ).resolves.toEqual({
-      fromWallet: updatedSenderMainWallet,
-      toWallet: updatedRecipientMainWallet,
-      transaction,
+      fromWallet: {
+        ...updatedSenderMainWallet,
+        balance: '70000',
+      },
+      toWallet: {
+        ...updatedRecipientMainWallet,
+        balance: '35000',
+      },
+      transaction: {
+        ...transaction,
+        amount: '30000',
+      },
     });
   });
 
@@ -269,7 +293,10 @@ describe('WalletService', () => {
     prisma.wallet.create.mockResolvedValue(createdWallet);
 
     await expect(service.createSavingsWallet('user-1')).resolves.toEqual(
-      createdWallet,
+      {
+        ...createdWallet,
+        balance: '0',
+      },
     );
   });
 
@@ -297,8 +324,14 @@ describe('WalletService', () => {
     prisma.wallet.findMany.mockResolvedValue(wallets);
 
     await expect(service.getUserWallets('user-1')).resolves.toEqual({
-      mainWallet: wallets[0],
-      savingsWallet: wallets[1],
+      mainWallet: {
+        ...wallets[0],
+        balance: '1000',
+      },
+      savingsWallet: {
+        ...wallets[1],
+        balance: '300',
+      },
     });
   });
 });

@@ -17,6 +17,23 @@ type WalletSummary = {
   updatedAt: Date;
 };
 
+type SerializedWalletSummary = Omit<WalletSummary, 'balance'> & {
+  balance: string;
+};
+
+type TransactionSummary = {
+  id: string;
+  amount: bigint;
+  type: 'SELF_DEPOSIT' | 'USER_TRANSFER' | 'MAIN_TO_SAVINGS';
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELED';
+  description: string | null;
+  createdAt: Date;
+};
+
+type SerializedTransactionSummary = Omit<TransactionSummary, 'amount'> & {
+  amount: string;
+};
+
 const walletSummarySelect = {
   id: true,
   type: true,
@@ -55,6 +72,22 @@ function getKstDayRange(now: Date) {
   };
 }
 
+function serializeWallet(wallet: WalletSummary): SerializedWalletSummary {
+  return {
+    ...wallet,
+    balance: wallet.balance.toString(),
+  };
+}
+
+function serializeTransaction(
+  transaction: TransactionSummary,
+): SerializedTransactionSummary {
+  return {
+    ...transaction,
+    amount: transaction.amount.toString(),
+  };
+}
+
 @Injectable()
 export class WalletService {
   constructor(
@@ -77,13 +110,15 @@ export class WalletService {
       throw new BadRequestException('적금 계좌가 이미 존재합니다.');
     }
 
-    return this.prisma.wallet.create({
+    const wallet = await this.prisma.wallet.create({
       data: {
         userId,
         type: 'SAVINGS',
       },
       select: walletSummarySelect,
     });
+
+    return serializeWallet(wallet);
   }
 
   async depositToMainWallet(userId: string, amount: number) {
@@ -153,11 +188,12 @@ export class WalletService {
         });
 
         return {
-          wallet: updatedMainWallet,
-          transaction,
-          remainingDailyLimit:
+          wallet: serializeWallet(updatedMainWallet),
+          transaction: serializeTransaction(transaction),
+          remainingDailyLimit: (
             DAILY_MAIN_WALLET_DEPOSIT_LIMIT -
-            (accumulatedDepositAmount + depositAmount),
+            (accumulatedDepositAmount + depositAmount)
+          ).toString(),
         };
       },
       {
@@ -236,9 +272,9 @@ export class WalletService {
         });
 
         return {
-          mainWallet: updatedMainWallet,
-          savingsWallet: updatedSavingsWallet,
-          transaction,
+          mainWallet: serializeWallet(updatedMainWallet),
+          savingsWallet: serializeWallet(updatedSavingsWallet),
+          transaction: serializeTransaction(transaction),
         };
       },
       {
@@ -330,9 +366,9 @@ export class WalletService {
         });
 
         return {
-          fromWallet: updatedSenderMainWallet,
-          toWallet: updatedRecipientMainWallet,
-          transaction,
+          fromWallet: serializeWallet(updatedSenderMainWallet),
+          toWallet: serializeWallet(updatedRecipientMainWallet),
+          transaction: serializeTransaction(transaction),
         };
       },
       {
@@ -348,13 +384,16 @@ export class WalletService {
       orderBy: { createdAt: 'asc' },
     });
 
+    const mainWallet = wallets.find((wallet) => wallet.type === 'MAIN') ?? null;
+    const savingsWallet =
+      wallets.find((wallet) => wallet.type === 'SAVINGS') ?? null;
+
     return {
-      mainWallet: wallets.find((wallet) => wallet.type === 'MAIN') ?? null,
-      savingsWallet:
-        wallets.find((wallet) => wallet.type === 'SAVINGS') ?? null,
+      mainWallet: mainWallet ? serializeWallet(mainWallet) : null,
+      savingsWallet: savingsWallet ? serializeWallet(savingsWallet) : null,
     } satisfies {
-      mainWallet: WalletSummary | null;
-      savingsWallet: WalletSummary | null;
+      mainWallet: SerializedWalletSummary | null;
+      savingsWallet: SerializedWalletSummary | null;
     };
   }
 }
