@@ -3,16 +3,14 @@
 import Link from 'next/link';
 import { RefreshCw } from 'lucide-react';
 
-import { useWalletsQuery } from '@/entities/wallet';
+import { useTransactionsQuery } from '@/entities/transaction';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
-import { SavingsEmptyState } from '@/widgets/wallets-overview/ui/savings-empty-state';
-import { WalletActions } from '@/widgets/wallets-overview/ui/wallet-actions';
-import { WalletCard } from '@/widgets/wallets-overview/ui/wallet-card';
-import { WalletSkeleton } from '@/widgets/wallets-overview/ui/wallet-skeleton';
+import { TransactionListItem } from '@/widgets/transactions-overview/ui/transaction-list-item';
+import { TransactionListSkeleton } from '@/widgets/transactions-overview/ui/transaction-list-skeleton';
 
-export default function WalletsPage() {
-  const { data, isLoading, isError, refetch, isFetching } = useWalletsQuery();
+export default function TransactionsPage() {
+  const { data, isLoading, isError, isFetching, refetch } = useTransactionsQuery();
 
   return (
     <main className="relative overflow-hidden">
@@ -21,16 +19,16 @@ export default function WalletsPage() {
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <div className="inline-flex rounded-full border border-primary/12 bg-primary/8 px-4 py-1.5 text-xs font-semibold tracking-[0.22em] uppercase text-primary">
-              Protected wallets
+              Protected transactions
             </div>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance md:text-5xl">
-              내 메인 계좌와 적금 계좌를
+              직접 충전과 이체 내역을
               <br />
-              한 화면에서 관리합니다.
+              한 곳에서 확인합니다.
             </h1>
             <p className="mt-4 text-base leading-8 text-muted-foreground">
-              로그인한 상태에서만 접근할 수 있는 지갑 대시보드입니다. 충전, 적금 이체,
-              사용자 송금 같은 흐름의 출발점을 여기에서 확인할 수 있습니다.
+              메인 계좌 충전, 적금 이체, 사용자 송금처럼 지금까지 만든 거래 흐름이 최신순으로
+              쌓입니다.
             </p>
           </div>
 
@@ -49,15 +47,9 @@ export default function WalletsPage() {
             </Button>
             <Link
               className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-14px_color-mix(in_oklab,var(--primary)_75%,black)] transition-all hover:brightness-110"
-              href="/transactions"
+              href="/wallets"
             >
-              거래내역
-            </Link>
-            <Link
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-14px_color-mix(in_oklab,var(--primary)_75%,black)] transition-all hover:brightness-110"
-              href="/"
-            >
-              홈으로
+              지갑으로
             </Link>
           </div>
         </header>
@@ -67,46 +59,60 @@ export default function WalletsPage() {
             <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
-                  지갑 정보를 불러오지 못했습니다.
+                  거래내역을 불러오지 못했습니다.
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  세션이 만료됐거나 일시적인 네트워크 문제가 있을 수 있습니다. 다시 시도한
-                  뒤에도 계속 실패하면 다시 로그인해 주세요.
+                  세션이 만료됐거나 일시적인 네트워크 문제가 있을 수 있습니다. 다시 시도해
+                  주세요.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    void refetch();
-                  }}
-                >
-                  다시 시도
-                </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  void refetch();
+                }}
+              >
+                다시 시도
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {isLoading ? <TransactionListSkeleton /> : null}
+
+        {!isLoading && data?.length === 0 ? (
+          <Card className="rounded-[28px] border-dashed border-primary/18 bg-card/92">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-semibold text-foreground">
+                아직 거래내역이 없습니다.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                지갑 페이지에서 직접 충전, 적금 이체, 사용자 송금을 시작하면 이곳에 최신
+                내역이 표시됩니다.
+              </p>
+              <div className="mt-6">
                 <Link
                   className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_-14px_color-mix(in_oklab,var(--primary)_75%,black)] transition-all hover:brightness-110"
-                  href="/login"
+                  href="/wallets"
                 >
-                  로그인으로
+                  지갑에서 거래 시작하기
                 </Link>
               </div>
             </CardContent>
           </Card>
         ) : null}
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          {isLoading ? <WalletSkeleton /> : data?.mainWallet ? <WalletCard wallet={data.mainWallet} /> : null}
-          {isLoading ? (
-            <WalletSkeleton />
-          ) : data?.savingsWallet ? (
-            <WalletCard wallet={data.savingsWallet} />
-          ) : (
-            <SavingsEmptyState />
-          )}
-        </section>
-
-        <WalletActions />
+        {!isLoading && data?.length ? (
+          <section className="grid gap-4">
+            {data.map((transaction) => (
+              <TransactionListItem
+                key={transaction.id}
+                transaction={transaction}
+              />
+            ))}
+          </section>
+        ) : null}
       </div>
     </main>
   );
