@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -28,6 +27,11 @@ export class UserService {
         email: dto.email,
         password: hashedPassword,
         name: dto.name,
+        wallets: {
+          create: {
+            type: 'MAIN',
+          },
+        },
       },
       select: {
         id: true,

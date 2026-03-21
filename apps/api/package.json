@@ -12,6 +12,7 @@
     "format:check": "pnpm exec prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "prisma:generate": "dotenv -e ../../.env -- prisma generate",
     "prisma:migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
+    "prisma:studio": "dotenv -e ../../.env -- prisma studio",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -29,6 +30,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.6",
     "@prisma/client": "^6.7.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -36,7 +38,8 @@
     "cookie-parser": "^1.4.7",
     "ioredis": "^5.8.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

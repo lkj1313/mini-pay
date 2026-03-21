@@ -39,13 +39,13 @@ export class SessionAuthGuard implements CanActivate {
     const sessionId = request.cookies?.[SESSION_COOKIE_NAME];
 
     if (!sessionId) {
-      throw new UnauthorizedException('Session not found.');
+      throw new UnauthorizedException('세션을 찾을 수 없습니다.');
     }
 
     const user = await this.authService.getSessionUser(sessionId);
 
     if (!user) {
-      throw new UnauthorizedException('Session expired.');
+      throw new UnauthorizedException('세션이 만료되었습니다.');
     }
 
     request.user = user;

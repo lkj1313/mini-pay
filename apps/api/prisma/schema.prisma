@@ -20,6 +20,17 @@ enum TransactionStatus {
   CANCELED
 }
 
+enum TransactionType {
+  SELF_DEPOSIT
+  USER_TRANSFER
+  MAIN_TO_SAVINGS
+}
+
+enum WalletType {
+  MAIN
+  SAVINGS
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -35,6 +46,7 @@ model Wallet {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
+  type     WalletType
   balance  BigInt       @default(0)
   currency String       @default("KRW")
   status   WalletStatus @default(ACTIVE)
@@ -46,18 +58,20 @@ model Wallet {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@unique([userId, type])
 }
 
 model Transaction {
   id String @id @default(cuid())
 
-  fromWalletId String
+  fromWalletId String?
   toWalletId   String
 
-  fromWallet Wallet @relation("FromWallet", fields: [fromWalletId], references: [id])
+  fromWallet Wallet? @relation("FromWallet", fields: [fromWalletId], references: [id])
   toWallet   Wallet @relation("ToWallet", fields: [toWalletId], references: [id])
 
   amount      BigInt
+  type        TransactionType
   status      TransactionStatus @default(PENDING)
   description String?
   createdAt   DateTime          @default(now())

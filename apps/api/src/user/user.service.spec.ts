@@ -78,6 +78,11 @@ describe('UserService', () => {
           email: dto.email,
           password: hashedPassword,
           name: dto.name,
+          wallets: {
+            create: {
+              type: 'MAIN',
+            },
+          },
         },
         select: {
           id: true,
