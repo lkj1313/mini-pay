@@ -34,6 +34,10 @@ const transactionSummarySelect = {
   createdAt: true,
 } as const;
 
+function serializeTransactionAmount(amount: bigint) {
+  return amount.toString();
+}
+
 @Injectable()
 export class TransactionService {
   constructor(private readonly prisma: PrismaService) {}
@@ -90,7 +94,7 @@ export class TransactionService {
         id: transaction.id,
         fromWalletId: transaction.fromWalletId,
         toWalletId: transaction.toWalletId,
-        amount: transaction.amount,
+        amount: serializeTransactionAmount(transaction.amount),
         type: transaction.type,
         status: transaction.status,
         description: transaction.description,

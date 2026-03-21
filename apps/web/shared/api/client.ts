@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 
+import { ApiError, type ApiErrorPayload } from '@/shared/api/types';
 import { env } from '@/shared/config/env';
 
 type NextRequestOptions = {
@@ -15,6 +16,7 @@ export type RequestOptions = {
   params?: Record<string, string | number | boolean | undefined | null>;
   cache?: RequestCache;
   next?: NextRequestOptions;
+  skipErrorToast?: boolean;
 };
 
 function buildUrlWithParams(
@@ -85,6 +87,10 @@ function getErrorMessage(payload: unknown, fallback: string) {
   return fallback;
 }
 
+function isSessionUnauthorized(status: number, message: string) {
+  return status === 401 && message.includes('세션');
+}
+
 async function fetchApi<T>(
   url: string,
   options: RequestOptions = {},
@@ -97,6 +103,7 @@ async function fetchApi<T>(
     params,
     cache = 'no-store',
     next,
+    skipErrorToast = false,
   } = options;
 
   let cookieHeader = cookie;
@@ -121,21 +128,32 @@ async function fetchApi<T>(
     next,
   });
 
-  const payload = await response
-    .json()
-    .catch(() => null);
+  const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
     const message = getErrorMessage(
       payload,
       response.statusText || '요청에 실패했습니다.',
     );
+    const sessionUnauthorized = isSessionUnauthorized(response.status, message);
 
     if (typeof window !== 'undefined') {
-      toast.error(message);
+      if (sessionUnauthorized) {
+        window.dispatchEvent(new CustomEvent('mini-pay:session-unauthorized'));
+      } else if (!skipErrorToast) {
+        toast.error(message);
+      }
     }
 
-    throw new Error(message);
+    throw new ApiError(
+      response.status,
+      message,
+      (payload as ApiErrorPayload | null) ?? undefined,
+    );
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('mini-pay:session-activity'));
   }
 
   return payload as T;

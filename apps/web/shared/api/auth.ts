@@ -1,5 +1,5 @@
 import { api } from '@/shared/api/client';
-import type { User } from '@/shared/api/types';
+import type { SessionInfo, User } from '@/shared/api/types';
 
 export type LoginRequest = {
   email: string;
@@ -14,10 +14,12 @@ export type SignupRequest = {
 
 export type MeResponse = {
   user: User;
+  session: SessionInfo;
 };
 
 export type LoginResponse = {
   user: User;
+  session: SessionInfo;
 };
 
 export type SignupResponse = User;
@@ -35,7 +37,7 @@ export function signup(body: SignupRequest) {
 }
 
 export function getMe() {
-  return api.get<MeResponse>('/auth/me');
+  return api.get<MeResponse>('/auth/me', { skipErrorToast: true });
 }
 
 export function logout() {

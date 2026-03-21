@@ -86,7 +86,7 @@ describe('LoginForm', () => {
         queryKey: ['auth', 'me'],
       });
       expect(mockToastSuccess).toHaveBeenCalledWith('로그인되었습니다.');
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith('/wallets');
     });
   });
 });

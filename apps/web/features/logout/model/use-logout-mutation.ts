@@ -4,24 +4,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import {
-  login,
-  type LoginRequest,
-  type LoginResponse,
-} from '@/shared/api/auth';
+import { logout } from '@/shared/api/auth';
 
-export function useLoginMutation() {
+export function useLogoutMutation() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  return useMutation<LoginResponse, Error, LoginRequest>({
-    mutationFn: login,
+  return useMutation({
+    mutationFn: logout,
     onSuccess: async () => {
+      queryClient.setQueryData(['auth', 'me'], null);
       await queryClient.invalidateQueries({
         queryKey: ['auth', 'me'],
       });
-      toast.success('로그인되었습니다.');
-      router.push('/wallets');
+      toast.success('로그아웃되었습니다.');
+      router.push('/login');
     },
   });
 }

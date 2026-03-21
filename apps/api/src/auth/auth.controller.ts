@@ -12,6 +12,8 @@ import { AuthService } from './auth.service';
 import {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_OPTIONS,
+  SESSION_IDLE_TTL_MS,
+  SESSION_IDLE_TTL_SECONDS,
 } from './auth.constants';
 import { LoginDto } from './dto/login.dto';
 import { Public } from '../common/decorators/public.decorator';
@@ -25,6 +27,13 @@ import {
 type AuthenticatedRequest = Request & {
   user: unknown;
 };
+
+function createSessionPayload() {
+  return {
+    idleTtlSeconds: SESSION_IDLE_TTL_SECONDS,
+    expiresAt: new Date(Date.now() + SESSION_IDLE_TTL_MS).toISOString(),
+  };
+}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -46,6 +55,7 @@ export class AuthController {
 
     return {
       user: result.user,
+      session: createSessionPayload(),
     };
   }
 
@@ -53,7 +63,10 @@ export class AuthController {
   @ApiOperation({ summary: '현재 로그인 사용자 조회' })
   @Get('me')
   async me(@Req() req: AuthenticatedRequest) {
-    return { user: req.user };
+    return {
+      user: req.user,
+      session: createSessionPayload(),
+    };
   }
 
   @Public()

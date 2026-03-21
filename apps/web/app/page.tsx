@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -8,6 +10,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
+import { useMeQuery } from '@/entities/user';
+import { useLogoutMutation } from '@/features/logout';
 import { cn } from '@/shared/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -54,6 +58,10 @@ const productSteps = [
 ];
 
 export default function HomePage() {
+  const meQuery = useMeQuery();
+  const logoutMutation = useLogoutMutation();
+  const user = meQuery.data?.user ?? null;
+
   return (
     <main className="relative overflow-hidden">
       <div className="absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_18%,transparent),transparent_42%)]" />
@@ -70,12 +78,36 @@ export default function HomePage() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <Link className={ghostCtaClassName} href="/login">
-              로그인
-            </Link>
-            <Link className={cn(primaryCtaClassName, 'h-11 px-5')} href="/signup">
-              회원가입
-            </Link>
+            {user ? (
+              <>
+                <div className="hidden rounded-full border border-primary/14 bg-primary/8 px-4 py-2 text-sm font-medium text-primary md:block">
+                  {user.name}
+                </div>
+                <Link className={ghostCtaClassName} href="/wallets">
+                  내 지갑
+                </Link>
+                <button
+                  className={cn(secondaryCtaClassName, 'h-11 px-5')}
+                  type="button"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                >
+                  {logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className={ghostCtaClassName} href="/login">
+                  로그인
+                </Link>
+                <Link
+                  className={cn(primaryCtaClassName, 'h-11 px-5')}
+                  href="/signup"
+                >
+                  회원가입
+                </Link>
+              </>
+            )}
           </div>
         </header>
 
@@ -98,14 +130,34 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className={primaryCtaClassName} href="/signup">
-                회원가입 시작
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link className={secondaryCtaClassName} href="/login">
-                로그인
-                <ArrowUpRight className="size-4" />
-              </Link>
+              {user ? (
+                <>
+                  <Link className={primaryCtaClassName} href="/wallets">
+                    내 지갑 열기
+                    <ArrowRight className="size-4" />
+                  </Link>
+                  <button
+                    className={secondaryCtaClassName}
+                    type="button"
+                    onClick={() => logoutMutation.mutate()}
+                    disabled={logoutMutation.isPending}
+                  >
+                    {logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
+                    <ArrowUpRight className="size-4" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link className={primaryCtaClassName} href="/signup">
+                    회원가입 시작
+                    <ArrowRight className="size-4" />
+                  </Link>
+                  <Link className={secondaryCtaClassName} href="/login">
+                    로그인
+                    <ArrowUpRight className="size-4" />
+                  </Link>
+                </>
+              )}
             </div>
 
             <ul className="mt-10 grid gap-3 text-sm text-muted-foreground md:grid-cols-3">

@@ -26,10 +26,10 @@ export function proxy(request: NextRequest) {
   }
 
   if (matchesAuthRoute(pathname) && hasSession) {
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = '/';
-    homeUrl.search = '';
-    return NextResponse.redirect(homeUrl);
+    const walletsUrl = request.nextUrl.clone();
+    walletsUrl.pathname = '/wallets';
+    walletsUrl.search = '';
+    return NextResponse.redirect(walletsUrl);
   }
 
   return NextResponse.next();

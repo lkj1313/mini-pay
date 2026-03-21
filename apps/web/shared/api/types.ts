@@ -28,6 +28,11 @@ export type User = {
   updatedAt: string;
 };
 
+export type SessionInfo = {
+  idleTtlSeconds: number;
+  expiresAt: string;
+};
+
 export type WalletType = "MAIN" | "SAVINGS";
 export type WalletStatus = "ACTIVE" | "FROZEN" | "CLOSED";
 
