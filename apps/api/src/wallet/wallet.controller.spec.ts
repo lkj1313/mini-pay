@@ -159,6 +159,11 @@ describe('WalletController', () => {
     walletService.createSavingsWallet.mockResolvedValue({
       id: 'wallet-savings',
       type: 'SAVINGS',
+      savingsDetail: {
+        productType: 'FREE',
+        annualInterestRate: '0.0300',
+        autoTransferAmount: null,
+      },
     });
 
     await expect(
@@ -166,11 +171,16 @@ describe('WalletController', () => {
         user: {
           id: 'user-1',
         },
-      } as any),
+      } as any, {}),
     ).resolves.toEqual({
       wallet: {
         id: 'wallet-savings',
         type: 'SAVINGS',
+        savingsDetail: {
+          productType: 'FREE',
+          annualInterestRate: '0.0300',
+          autoTransferAmount: null,
+        },
       },
     });
   });

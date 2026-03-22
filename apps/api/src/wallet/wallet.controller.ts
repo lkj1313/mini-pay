@@ -6,6 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { SESSION_COOKIE_NAME } from '../auth/auth.constants';
+import { CreateSavingsWalletDto } from './dto/create-savings-wallet.dto';
 import { DepositMainWalletDto } from './dto/deposit-main-wallet.dto';
 import { TransferToSavingsDto } from './dto/transfer-to-savings.dto';
 import { TransferToUserDto } from './dto/transfer-to-user.dto';
@@ -56,8 +57,11 @@ export class WalletController {
 
   @ApiOperation({ summary: '적금 계좌 생성' })
   @Post('savings')
-  async createSavingsWallet(@Req() req: AuthenticatedRequest) {
-    const wallet = await this.walletService.createSavingsWallet(req.user.id);
+  async createSavingsWallet(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateSavingsWalletDto,
+  ) {
+    const wallet = await this.walletService.createSavingsWallet(req.user.id, dto);
 
     return { wallet };
   }

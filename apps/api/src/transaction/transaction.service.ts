@@ -5,6 +5,8 @@ const transactionSummarySelect = {
   id: true,
   fromWalletId: true,
   toWalletId: true,
+  fromUserNameSnapshot: true,
+  toUserNameSnapshot: true,
   fromWallet: {
     select: {
       type: true,
@@ -78,6 +80,13 @@ export class TransactionService {
         transaction.fromWalletId !== null &&
         transaction.fromWallet?.user.id === userId;
 
+      const fromUserName =
+        transaction.fromUserNameSnapshot ??
+        transaction.fromWallet?.user.name ??
+        null;
+      const toUserName =
+        transaction.toUserNameSnapshot ?? transaction.toWallet.user.name;
+
       let counterpartyName: string;
 
       if (transaction.type === 'SELF_DEPOSIT') {
@@ -86,8 +95,8 @@ export class TransactionService {
         counterpartyName = isOutgoing ? '내 적금 계좌' : '내 메인 계좌';
       } else {
         counterpartyName = isOutgoing
-          ? transaction.toWallet.user.name
-          : (transaction.fromWallet?.user.name ?? '알 수 없음');
+          ? toUserName
+          : (fromUserName ?? '알 수 없음');
       }
 
       return {
@@ -99,8 +108,8 @@ export class TransactionService {
         status: transaction.status,
         description: transaction.description,
         createdAt: transaction.createdAt,
-        fromUserName: transaction.fromWallet?.user.name ?? null,
-        toUserName: transaction.toWallet.user.name,
+        fromUserName,
+        toUserName,
         counterpartyName,
       };
     });
