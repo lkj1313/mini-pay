@@ -23,6 +23,26 @@ services:
     volumes:
       - redis_data:/data
 
+  ngrinder-controller:
+    image: ngrinder/controller:3.5.9-p1
+    container_name: mini-pay-ngrinder-controller
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+      - '16001:16001'
+      - '12000-12009:12000-12009'
+    volumes:
+      - ngrinder_controller_data:/opt/ngrinder-controller
+
+  ngrinder-agent:
+    image: ngrinder/agent:3.5.9-p1
+    container_name: mini-pay-ngrinder-agent
+    restart: unless-stopped
+    depends_on:
+      - ngrinder-controller
+    command: ['ngrinder-controller:80']
+
 volumes:
   postgres_data:
   redis_data:
+  ngrinder_controller_data:
