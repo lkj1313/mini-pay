@@ -36,7 +36,7 @@ describe('TransactionService', () => {
     service = module.get<TransactionService>(TransactionService);
   });
 
-  it('returns transactions connected to the current user wallets with names', async () => {
+  it('거래내역 조회 시 snapshot 이름을 우선 사용한다', async () => {
     prisma.wallet.findMany.mockResolvedValue([
       { id: 'wallet-main' },
       { id: 'wallet-savings' },
@@ -46,12 +46,14 @@ describe('TransactionService', () => {
         id: 'tx-1',
         fromWalletId: null,
         toWalletId: 'wallet-main',
+        fromUserNameSnapshot: null,
+        toUserNameSnapshot: '홍길동',
         fromWallet: null,
         toWallet: {
           type: 'MAIN',
           user: {
             id: 'user-1',
-            name: '내 이름',
+            name: '현재이름',
           },
         },
         amount: 50000n,
@@ -64,18 +66,20 @@ describe('TransactionService', () => {
         id: 'tx-2',
         fromWalletId: 'wallet-main',
         toWalletId: 'wallet-savings',
+        fromUserNameSnapshot: '홍길동',
+        toUserNameSnapshot: '홍길동',
         fromWallet: {
           type: 'MAIN',
           user: {
             id: 'user-1',
-            name: '내 이름',
+            name: '현재이름',
           },
         },
         toWallet: {
           type: 'SAVINGS',
           user: {
             id: 'user-1',
-            name: '내 이름',
+            name: '현재이름',
           },
         },
         amount: 30000n,
@@ -88,18 +92,20 @@ describe('TransactionService', () => {
         id: 'tx-3',
         fromWalletId: 'wallet-friend',
         toWalletId: 'wallet-main',
+        fromUserNameSnapshot: '옛친구이름',
+        toUserNameSnapshot: '홍길동',
         fromWallet: {
           type: 'MAIN',
           user: {
             id: 'user-2',
-            name: '친구',
+            name: '지금친구이름',
           },
         },
         toWallet: {
           type: 'MAIN',
           user: {
             id: 'user-1',
-            name: '내 이름',
+            name: '현재이름',
           },
         },
         amount: 15000n,
@@ -107,6 +113,32 @@ describe('TransactionService', () => {
         status: 'SUCCESS',
         description: '사용자 간 메인 계좌 송금',
         createdAt: new Date('2026-03-18T00:20:00.000Z'),
+      },
+      {
+        id: 'tx-4',
+        fromWalletId: 'wallet-friend',
+        toWalletId: 'wallet-main',
+        fromUserNameSnapshot: null,
+        toUserNameSnapshot: null,
+        fromWallet: {
+          type: 'MAIN',
+          user: {
+            id: 'user-2',
+            name: 'fallback친구',
+          },
+        },
+        toWallet: {
+          type: 'MAIN',
+          user: {
+            id: 'user-1',
+            name: 'fallback나',
+          },
+        },
+        amount: 9000n,
+        type: 'USER_TRANSFER',
+        status: 'SUCCESS',
+        description: '예전 거래',
+        createdAt: new Date('2026-03-18T00:30:00.000Z'),
       },
     ]);
 
@@ -121,7 +153,7 @@ describe('TransactionService', () => {
         description: '본인 직접 충전',
         createdAt: new Date('2026-03-18T00:00:00.000Z'),
         fromUserName: null,
-        toUserName: '내 이름',
+        toUserName: '홍길동',
         counterpartyName: '본인',
       },
       {
@@ -133,8 +165,8 @@ describe('TransactionService', () => {
         status: 'SUCCESS',
         description: '메인 계좌에서 적금 계좌로 이체',
         createdAt: new Date('2026-03-18T00:10:00.000Z'),
-        fromUserName: '내 이름',
-        toUserName: '내 이름',
+        fromUserName: '홍길동',
+        toUserName: '홍길동',
         counterpartyName: '내 적금 계좌',
       },
       {
@@ -146,9 +178,22 @@ describe('TransactionService', () => {
         status: 'SUCCESS',
         description: '사용자 간 메인 계좌 송금',
         createdAt: new Date('2026-03-18T00:20:00.000Z'),
-        fromUserName: '친구',
-        toUserName: '내 이름',
-        counterpartyName: '친구',
+        fromUserName: '옛친구이름',
+        toUserName: '홍길동',
+        counterpartyName: '옛친구이름',
+      },
+      {
+        id: 'tx-4',
+        fromWalletId: 'wallet-friend',
+        toWalletId: 'wallet-main',
+        amount: '9000',
+        type: 'USER_TRANSFER',
+        status: 'SUCCESS',
+        description: '예전 거래',
+        createdAt: new Date('2026-03-18T00:30:00.000Z'),
+        fromUserName: 'fallback친구',
+        toUserName: 'fallback나',
+        counterpartyName: 'fallback친구',
       },
     ]);
 
@@ -175,6 +220,8 @@ describe('TransactionService', () => {
         id: true,
         fromWalletId: true,
         toWalletId: true,
+        fromUserNameSnapshot: true,
+        toUserNameSnapshot: true,
         fromWallet: {
           select: {
             type: true,
@@ -207,7 +254,7 @@ describe('TransactionService', () => {
     });
   });
 
-  it('returns an empty list when the user has no wallets', async () => {
+  it('지갑이 없으면 빈 거래내역을 반환한다', async () => {
     prisma.wallet.findMany.mockResolvedValue([]);
 
     await expect(service.getMyTransactions('user-1')).resolves.toEqual([]);

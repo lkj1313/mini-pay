@@ -4,8 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { getKstDayRange } from '../common/utils/date-range.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import { CreateSavingsWalletDto } from './dto/create-savings-wallet.dto';
 
 type WalletSummary = {
   id: string;
@@ -21,10 +23,46 @@ type SerializedWalletSummary = Omit<WalletSummary, 'balance'> & {
   balance: string;
 };
 
+type SavingsDetailSummary = {
+  productType: 'FREE' | 'FIXED';
+  annualInterestRate: Prisma.Decimal;
+  autoTransferAmount: bigint | null;
+  startedAt: Date;
+  maturityAt: Date | null;
+  lastInterestAppliedAt: Date | null;
+  lastAutoTransferAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type SerializedSavingsDetailSummary = Omit<
+  SavingsDetailSummary,
+  'annualInterestRate' | 'autoTransferAmount'
+> & {
+  annualInterestRate: string;
+  autoTransferAmount: string | null;
+};
+
+type WalletWithSavingsDetailSummary = WalletSummary & {
+  savingsDetail: SavingsDetailSummary | null;
+};
+
+type SerializedWalletWithSavingsDetailSummary = Omit<
+  SerializedWalletSummary,
+  'balance'
+> & {
+  balance: string;
+  savingsDetail: SerializedSavingsDetailSummary | null;
+};
+
 type TransactionSummary = {
   id: string;
   amount: bigint;
-  type: 'SELF_DEPOSIT' | 'USER_TRANSFER' | 'MAIN_TO_SAVINGS';
+  type:
+    | 'SELF_DEPOSIT'
+    | 'USER_TRANSFER'
+    | 'MAIN_TO_SAVINGS'
+    | 'SAVINGS_INTEREST';
   status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELED';
   description: string | null;
   createdAt: Date;
@@ -53,29 +91,50 @@ const transactionSummarySelect = {
   createdAt: true,
 } as const;
 
+const savingsDetailSelect = {
+  productType: true,
+  annualInterestRate: true,
+  autoTransferAmount: true,
+  startedAt: true,
+  maturityAt: true,
+  lastInterestAppliedAt: true,
+  lastAutoTransferAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 const DAILY_MAIN_WALLET_DEPOSIT_LIMIT = 3_000_000n;
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
-function getKstDayRange(now: Date) {
-  const kstNow = new Date(now.getTime() + KST_OFFSET_MS);
-  const startMs =
-    Date.UTC(
-      kstNow.getUTCFullYear(),
-      kstNow.getUTCMonth(),
-      kstNow.getUTCDate(),
-    ) - KST_OFFSET_MS;
-
-  return {
-    start: new Date(startMs),
-    end: new Date(startMs + ONE_DAY_MS),
-  };
-}
+const AUTO_TOP_UP_UNIT = 10_000n;
+const FREE_SAVINGS_INTEREST_RATE = '0.0300';
+const FIXED_SAVINGS_INTEREST_RATE = '0.0500';
 
 function serializeWallet(wallet: WalletSummary): SerializedWalletSummary {
   return {
     ...wallet,
     balance: wallet.balance.toString(),
+  };
+}
+
+function serializeSavingsDetail(
+  savingsDetail: SavingsDetailSummary,
+): SerializedSavingsDetailSummary {
+  return {
+    ...savingsDetail,
+    annualInterestRate: savingsDetail.annualInterestRate.toString(),
+    autoTransferAmount:
+      savingsDetail.autoTransferAmount?.toString() ?? null,
+  };
+}
+
+function serializeWalletWithSavingsDetail(
+  wallet: WalletWithSavingsDetailSummary,
+): SerializedWalletWithSavingsDetailSummary {
+  return {
+    ...wallet,
+    balance: wallet.balance.toString(),
+    savingsDetail: wallet.savingsDetail
+      ? serializeSavingsDetail(wallet.savingsDetail)
+      : null,
   };
 }
 
@@ -88,6 +147,14 @@ function serializeTransaction(
   };
 }
 
+function roundUpToAutoTopUpUnit(amount: bigint) {
+  if (amount <= 0n) {
+    return 0n;
+  }
+
+  return ((amount + AUTO_TOP_UP_UNIT - 1n) / AUTO_TOP_UP_UNIT) * AUTO_TOP_UP_UNIT;
+}
+
 @Injectable()
 export class WalletService {
   constructor(
@@ -95,7 +162,7 @@ export class WalletService {
     private readonly userService: UserService,
   ) {}
 
-  async createSavingsWallet(userId: string) {
+  async createSavingsWallet(userId: string, dto?: CreateSavingsWalletDto) {
     const existingSavingsWallet = await this.prisma.wallet.findUnique({
       where: {
         userId_type: {
@@ -110,20 +177,47 @@ export class WalletService {
       throw new BadRequestException('적금 계좌가 이미 존재합니다.');
     }
 
+    const productType = dto?.productType ?? 'FREE';
+
+    if (productType === 'FIXED' && !dto?.autoTransferAmount) {
+      throw new BadRequestException(
+        '정기 적금은 자동 이체 금액이 필요합니다.',
+      );
+    }
+
     const wallet = await this.prisma.wallet.create({
       data: {
         userId,
         type: 'SAVINGS',
+        savingsDetail: {
+          create: {
+            productType,
+            annualInterestRate:
+              productType === 'FIXED'
+                ? FIXED_SAVINGS_INTEREST_RATE
+                : FREE_SAVINGS_INTEREST_RATE,
+            autoTransferAmount:
+              productType === 'FIXED'
+                ? BigInt(dto?.autoTransferAmount ?? 0)
+                : null,
+          },
+        },
       },
-      select: walletSummarySelect,
+      select: {
+        ...walletSummarySelect,
+        savingsDetail: {
+          select: savingsDetailSelect,
+        },
+      },
     });
 
-    return serializeWallet(wallet);
+    return serializeWalletWithSavingsDetail(wallet);
   }
 
   async depositToMainWallet(userId: string, amount: number) {
     const depositAmount = BigInt(amount);
     const { start, end } = getKstDayRange(new Date());
+    const currentUser = await this.userService.findOne(userId);
 
     return this.prisma.$transaction(
       async (tx) => {
@@ -179,6 +273,8 @@ export class WalletService {
           data: {
             fromWalletId: null,
             toWalletId: mainWallet.id,
+            fromUserNameSnapshot: null,
+            toUserNameSnapshot: currentUser.name,
             amount: depositAmount,
             type: 'SELF_DEPOSIT',
             status: 'SUCCESS',
@@ -204,6 +300,7 @@ export class WalletService {
 
   async transferMainToSavings(userId: string, amount: number) {
     const transferAmount = BigInt(amount);
+    const currentUser = await this.userService.findOne(userId);
 
     return this.prisma.$transaction(
       async (tx) => {
@@ -263,6 +360,8 @@ export class WalletService {
           data: {
             fromWalletId: mainWallet.id,
             toWalletId: savingsWallet.id,
+            fromUserNameSnapshot: currentUser.name,
+            toUserNameSnapshot: currentUser.name,
             amount: transferAmount,
             type: 'MAIN_TO_SAVINGS',
             status: 'SUCCESS',
@@ -290,6 +389,8 @@ export class WalletService {
   ) {
     const transferAmount = BigInt(amount);
     const recipient = await this.userService.getUserByEmail(toEmail);
+    const sender = await this.userService.findOne(fromUserId);
+    const { start, end } = getKstDayRange(new Date());
 
     if (!recipient) {
       throw new NotFoundException('받는 사용자를 찾을 수 없습니다.');
@@ -329,12 +430,63 @@ export class WalletService {
           throw new NotFoundException('받는 메인 계좌를 찾을 수 없습니다.');
         }
 
+        let availableSenderMainWallet = senderMainWallet;
+
         if (senderMainWallet.balance < transferAmount) {
-          throw new BadRequestException('메인 계좌 잔액이 부족합니다.');
+          const shortfall = transferAmount - senderMainWallet.balance;
+          const autoDepositAmount = roundUpToAutoTopUpUnit(shortfall);
+
+          const todayDepositAmount = await tx.transaction.aggregate({
+            where: {
+              toWalletId: senderMainWallet.id,
+              type: 'SELF_DEPOSIT',
+              status: 'SUCCESS',
+              createdAt: {
+                gte: start,
+                lt: end,
+              },
+            },
+            _sum: {
+              amount: true,
+            },
+          });
+
+          const accumulatedDepositAmount = todayDepositAmount._sum.amount ?? 0n;
+
+          if (
+            accumulatedDepositAmount + autoDepositAmount >
+            DAILY_MAIN_WALLET_DEPOSIT_LIMIT
+          ) {
+            throw new BadRequestException('1일 직접 충전 한도를 초과했습니다.');
+          }
+
+          availableSenderMainWallet = await tx.wallet.update({
+            where: { id: senderMainWallet.id },
+            data: {
+              balance: {
+                increment: autoDepositAmount,
+              },
+            },
+            select: walletSummarySelect,
+          });
+
+          await tx.transaction.create({
+            data: {
+              fromWalletId: null,
+              toWalletId: senderMainWallet.id,
+              fromUserNameSnapshot: null,
+              toUserNameSnapshot: sender.name,
+              amount: autoDepositAmount,
+              type: 'SELF_DEPOSIT',
+              status: 'SUCCESS',
+              description: '자동 충전',
+            },
+            select: transactionSummarySelect,
+          });
         }
 
         const updatedSenderMainWallet = await tx.wallet.update({
-          where: { id: senderMainWallet.id },
+          where: { id: availableSenderMainWallet.id },
           data: {
             balance: {
               decrement: transferAmount,
@@ -355,8 +507,10 @@ export class WalletService {
 
         const transaction = await tx.transaction.create({
           data: {
-            fromWalletId: senderMainWallet.id,
+            fromWalletId: availableSenderMainWallet.id,
             toWalletId: recipientMainWallet.id,
+            fromUserNameSnapshot: sender.name,
+            toUserNameSnapshot: recipient.name,
             amount: transferAmount,
             type: 'USER_TRANSFER',
             status: 'SUCCESS',
@@ -380,7 +534,12 @@ export class WalletService {
   async getUserWallets(userId: string) {
     const wallets = await this.prisma.wallet.findMany({
       where: { userId },
-      select: walletSummarySelect,
+      select: {
+        ...walletSummarySelect,
+        savingsDetail: {
+          select: savingsDetailSelect,
+        },
+      },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -389,11 +548,13 @@ export class WalletService {
       wallets.find((wallet) => wallet.type === 'SAVINGS') ?? null;
 
     return {
-      mainWallet: mainWallet ? serializeWallet(mainWallet) : null,
-      savingsWallet: savingsWallet ? serializeWallet(savingsWallet) : null,
+      mainWallet: mainWallet ? serializeWalletWithSavingsDetail(mainWallet) : null,
+      savingsWallet: savingsWallet
+        ? serializeWalletWithSavingsDetail(savingsWallet)
+        : null,
     } satisfies {
-      mainWallet: SerializedWalletSummary | null;
-      savingsWallet: SerializedWalletSummary | null;
+      mainWallet: SerializedWalletWithSavingsDetailSummary | null;
+      savingsWallet: SerializedWalletWithSavingsDetailSummary | null;
     };
   }
 }
