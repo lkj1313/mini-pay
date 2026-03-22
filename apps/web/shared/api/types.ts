@@ -35,6 +35,19 @@ export type SessionInfo = {
 
 export type WalletType = "MAIN" | "SAVINGS";
 export type WalletStatus = "ACTIVE" | "FROZEN" | "CLOSED";
+export type SavingsProductType = "FREE" | "FIXED";
+
+export type SavingsDetail = {
+  productType: SavingsProductType;
+  annualInterestRate: string;
+  autoTransferAmount: Money | null;
+  startedAt: string;
+  maturityAt: string | null;
+  lastInterestAppliedAt: string | null;
+  lastAutoTransferAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type Wallet = {
   id: string;
@@ -42,6 +55,7 @@ export type Wallet = {
   balance: Money;
   currency: string;
   status: WalletStatus;
+  savingsDetail?: SavingsDetail | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -49,7 +63,8 @@ export type Wallet = {
 export type TransactionType =
   | "SELF_DEPOSIT"
   | "USER_TRANSFER"
-  | "MAIN_TO_SAVINGS";
+  | "MAIN_TO_SAVINGS"
+  | "SAVINGS_INTEREST";
 
 export type TransactionStatus =
   | "PENDING"

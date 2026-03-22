@@ -10,11 +10,16 @@ export function useCreateSavingsWalletMutation() {
 
   return useMutation({
     mutationFn: createSavingsWallet,
-    onSuccess: async () => {
+    onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({
         queryKey: ['wallets', 'me'],
       });
-      toast.success('적금 계좌가 생성되었습니다.');
+
+      toast.success(
+        variables?.productType === 'FIXED'
+          ? '정기 적금 계좌가 생성되었습니다.'
+          : '자유 적금 계좌가 생성되었습니다.',
+      );
     },
   });
 }
