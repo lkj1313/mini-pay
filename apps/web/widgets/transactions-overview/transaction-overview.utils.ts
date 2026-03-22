@@ -18,6 +18,8 @@ export function getTransactionTypeLabel(type: TransactionType) {
       return '적금 이체';
     case 'USER_TRANSFER':
       return '사용자 송금';
+    case 'SAVINGS_INTEREST':
+      return '적금 이자';
     default:
       return type;
   }
@@ -52,6 +54,8 @@ export function getTransactionDescription(transaction: Transaction) {
       return transaction.counterpartyName
         ? `${transaction.counterpartyName} 관련 송금`
         : '사용자 간 송금';
+    case 'SAVINGS_INTEREST':
+      return '적금 이자 지급';
     default:
       return '거래';
   }
@@ -60,6 +64,10 @@ export function getTransactionDescription(transaction: Transaction) {
 export function getTransactionCounterparty(transaction: Transaction) {
   if (transaction.type === 'SELF_DEPOSIT') {
     return '본인';
+  }
+
+  if (transaction.type === 'SAVINGS_INTEREST') {
+    return '시스템';
   }
 
   return transaction.counterpartyName ?? '상대 정보 없음';

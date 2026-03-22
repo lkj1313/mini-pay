@@ -20,6 +20,11 @@ export type CreateSavingsWalletResponse = {
   wallet: Wallet;
 };
 
+export type CreateSavingsWalletRequest = {
+  productType?: "FREE" | "FIXED";
+  autoTransferAmount?: number;
+};
+
 export type TransferToSavingsRequest = {
   amount: number;
 };
@@ -45,8 +50,8 @@ export function getMyWallets() {
   return api.get<MyWalletsResponse>("/wallets/me");
 }
 
-export function createSavingsWallet() {
-  return api.post<CreateSavingsWalletResponse>("/wallets/savings");
+export function createSavingsWallet(body?: CreateSavingsWalletRequest) {
+  return api.post<CreateSavingsWalletResponse>("/wallets/savings", body);
 }
 
 export function depositToMainWallet(body: DepositMainWalletRequest) {

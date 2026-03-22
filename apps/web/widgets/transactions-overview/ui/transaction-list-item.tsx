@@ -1,6 +1,11 @@
-import { ArrowDownToLine, ArrowRightLeft, PiggyBank } from 'lucide-react';
+import {
+  ArrowDownToLine,
+  ArrowRightLeft,
+  Coins,
+  PiggyBank,
+} from 'lucide-react';
 
-import type { Transaction } from '@/shared/api/types';
+import type { Transaction, TransactionType } from '@/shared/api/types';
 import { Card, CardContent } from '@/shared/ui/card';
 import {
   formatMoney,
@@ -14,11 +19,12 @@ type TransactionListItemProps = {
   transaction: Transaction;
 };
 
-const TRANSACTION_ICON_MAP = {
+const TRANSACTION_ICON_MAP: Record<TransactionType, typeof ArrowRightLeft> = {
   SELF_DEPOSIT: ArrowDownToLine,
   MAIN_TO_SAVINGS: PiggyBank,
   USER_TRANSFER: ArrowRightLeft,
-} as const;
+  SAVINGS_INTEREST: Coins,
+};
 
 export function TransactionListItem({
   transaction,
