@@ -58,7 +58,7 @@ describe('WalletController', () => {
             id: 'user-1',
           },
         } as any,
-        { toEmail: 'friend@example.com', amount: 30000 },
+        { toEmail: 'friend@example.com', amount: '30000' },
       ),
     ).resolves.toEqual({
       fromWallet: {
@@ -97,7 +97,7 @@ describe('WalletController', () => {
             id: 'user-1',
           },
         } as any,
-        { amount: 50000 },
+        { amount: '50000' },
       ),
     ).resolves.toEqual({
       wallet: {
@@ -136,7 +136,7 @@ describe('WalletController', () => {
             id: 'user-1',
           },
         } as any,
-        { amount: 30000 },
+        { amount: '30000' },
       ),
     ).resolves.toEqual({
       mainWallet: {
@@ -167,11 +167,14 @@ describe('WalletController', () => {
     });
 
     await expect(
-      controller.createSavingsWallet({
-        user: {
-          id: 'user-1',
-        },
-      } as any, {}),
+      controller.createSavingsWallet(
+        {
+          user: {
+            id: 'user-1',
+          },
+        } as any,
+        {},
+      ),
     ).resolves.toEqual({
       wallet: {
         id: 'wallet-savings',

@@ -10,14 +10,8 @@ export const transferToUserSchema = z.object({
     .string()
     .trim()
     .min(1, '송금 금액을 입력해주세요.')
-    .refine((value) => /^\d+$/.test(value), {
-      message: '송금 금액은 숫자만 입력해주세요.',
-    })
-    .transform((value) => Number(value))
-    .refine(Number.isInteger, {
-      message: '송금 금액은 정수여야 합니다.',
-    })
-    .refine((value) => value >= 1, {
+    .regex(/^\d+$/, '송금 금액은 숫자만 입력해주세요.')
+    .refine((value) => BigInt(value) >= BigInt(1), {
       message: '송금 금액은 1원 이상이어야 합니다.',
     }),
 });

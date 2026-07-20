@@ -54,7 +54,9 @@ describe('SavingsSchedulerService', () => {
       failedCount: 1,
     });
 
-    await expect(service.handleDailyFixedAutoTransfer()).resolves.toBeUndefined();
+    await expect(
+      service.handleDailyFixedAutoTransfer(),
+    ).resolves.toBeUndefined();
 
     expect(
       savingsBatchService.runDailyFixedAutoTransferBatch,
@@ -66,6 +68,8 @@ describe('SavingsSchedulerService', () => {
       new Error('auto transfer batch failed'),
     );
 
-    await expect(service.handleDailyFixedAutoTransfer()).resolves.toBeUndefined();
+    await expect(
+      service.handleDailyFixedAutoTransfer(),
+    ).resolves.toBeUndefined();
   });
 });

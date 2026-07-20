@@ -7,7 +7,7 @@ export type MyWalletsResponse = {
 };
 
 export type DepositMainWalletRequest = {
-  amount: number;
+  amount: string;
 };
 
 export type DepositMainWalletResponse = {
@@ -22,11 +22,11 @@ export type CreateSavingsWalletResponse = {
 
 export type CreateSavingsWalletRequest = {
   productType?: "FREE" | "FIXED";
-  autoTransferAmount?: number;
+  autoTransferAmount?: string;
 };
 
 export type TransferToSavingsRequest = {
-  amount: number;
+  amount: string;
 };
 
 export type TransferToSavingsResponse = {
@@ -37,7 +37,7 @@ export type TransferToSavingsResponse = {
 
 export type TransferToUserRequest = {
   toEmail: string;
-  amount: number;
+  amount: string;
 };
 
 export type TransferToUserResponse = {

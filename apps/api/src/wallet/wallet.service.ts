@@ -8,6 +8,9 @@ import { getKstDayRange } from '../common/utils/date-range.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { CreateSavingsWalletDto } from './dto/create-savings-wallet.dto';
+import { DepositMainWalletDto } from './dto/deposit-main-wallet.dto';
+import { TransferToSavingsDto } from './dto/transfer-to-savings.dto';
+import { TransferToUserDto } from './dto/transfer-to-user.dto';
 
 type WalletSummary = {
   id: string;
@@ -121,8 +124,7 @@ function serializeSavingsDetail(
   return {
     ...savingsDetail,
     annualInterestRate: savingsDetail.annualInterestRate.toString(),
-    autoTransferAmount:
-      savingsDetail.autoTransferAmount?.toString() ?? null,
+    autoTransferAmount: savingsDetail.autoTransferAmount?.toString() ?? null,
   };
 }
 
@@ -152,7 +154,9 @@ function roundUpToAutoTopUpUnit(amount: bigint) {
     return 0n;
   }
 
-  return ((amount + AUTO_TOP_UP_UNIT - 1n) / AUTO_TOP_UP_UNIT) * AUTO_TOP_UP_UNIT;
+  return (
+    ((amount + AUTO_TOP_UP_UNIT - 1n) / AUTO_TOP_UP_UNIT) * AUTO_TOP_UP_UNIT
+  );
 }
 
 @Injectable()
@@ -180,9 +184,7 @@ export class WalletService {
     const productType = dto?.productType ?? 'FREE';
 
     if (productType === 'FIXED' && !dto?.autoTransferAmount) {
-      throw new BadRequestException(
-        '정기 적금은 자동 이체 금액이 필요합니다.',
-      );
+      throw new BadRequestException('정기 적금은 자동 이체 금액이 필요합니다.');
     }
 
     const wallet = await this.prisma.wallet.create({
@@ -214,8 +216,8 @@ export class WalletService {
     return serializeWalletWithSavingsDetail(wallet);
   }
 
-  async depositToMainWallet(userId: string, amount: number) {
-    const depositAmount = BigInt(amount);
+  async depositToMainWallet(userId: string, dto: DepositMainWalletDto) {
+    const depositAmount = BigInt(dto.amount);
     const { start, end } = getKstDayRange(new Date());
     const currentUser = await this.userService.findOne(userId);
 
@@ -298,8 +300,8 @@ export class WalletService {
     );
   }
 
-  async transferMainToSavings(userId: string, amount: number) {
-    const transferAmount = BigInt(amount);
+  async transferMainToSavings(userId: string, dto: TransferToSavingsDto) {
+    const transferAmount = BigInt(dto.amount);
     const currentUser = await this.userService.findOne(userId);
 
     return this.prisma.$transaction(
@@ -382,13 +384,9 @@ export class WalletService {
     );
   }
 
-  async transferToUserMainWallet(
-    fromUserId: string,
-    toEmail: string,
-    amount: number,
-  ) {
-    const transferAmount = BigInt(amount);
-    const recipient = await this.userService.getUserByEmail(toEmail);
+  async transferToUserMainWallet(fromUserId: string, dto: TransferToUserDto) {
+    const transferAmount = BigInt(dto.amount);
+    const recipient = await this.userService.getUserByEmail(dto.toEmail);
     const sender = await this.userService.findOne(fromUserId);
     const { start, end } = getKstDayRange(new Date());
 
@@ -548,7 +546,9 @@ export class WalletService {
       wallets.find((wallet) => wallet.type === 'SAVINGS') ?? null;
 
     return {
-      mainWallet: mainWallet ? serializeWalletWithSavingsDetail(mainWallet) : null,
+      mainWallet: mainWallet
+        ? serializeWalletWithSavingsDetail(mainWallet)
+        : null,
       savingsWallet: savingsWallet
         ? serializeWalletWithSavingsDetail(savingsWallet)
         : null,

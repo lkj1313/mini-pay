@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
@@ -60,7 +61,12 @@ describe('WalletService', () => {
 
     service = module.get<WalletService>(WalletService);
 
-    prisma.$transaction.mockImplementation(async (callback: any) =>
+    type TransactionCallback = (tx: {
+      wallet: typeof prisma.wallet;
+      transaction: typeof prisma.transaction;
+    }) => unknown;
+
+    prisma.$transaction.mockImplementation((callback: TransactionCallback) =>
       callback({
         wallet: prisma.wallet,
         transaction: prisma.transaction,
@@ -104,19 +110,19 @@ describe('WalletService', () => {
     prisma.wallet.update.mockResolvedValue(updatedMainWallet);
     prisma.transaction.create.mockResolvedValue(transaction);
 
-    await expect(service.depositToMainWallet('user-1', 50000)).resolves.toEqual(
-      {
-        wallet: {
-          ...updatedMainWallet,
-          balance: '51000',
-        },
-        transaction: {
-          ...transaction,
-          amount: '50000',
-        },
-        remainingDailyLimit: '2850000',
+    await expect(
+      service.depositToMainWallet('user-1', { amount: '50000' }),
+    ).resolves.toEqual({
+      wallet: {
+        ...updatedMainWallet,
+        balance: '51000',
       },
-    );
+      transaction: {
+        ...transaction,
+        amount: '50000',
+      },
+      remainingDailyLimit: '2850000',
+    });
   });
 
   it('메인 계좌에서 적금 계좌로 이체한다', async () => {
@@ -168,7 +174,7 @@ describe('WalletService', () => {
     prisma.transaction.create.mockResolvedValue(transaction);
 
     await expect(
-      service.transferMainToSavings('user-1', 30000),
+      service.transferMainToSavings('user-1', { amount: '30000' }),
     ).resolves.toEqual({
       mainWallet: {
         ...updatedMainWallet,
@@ -239,7 +245,10 @@ describe('WalletService', () => {
     prisma.transaction.create.mockResolvedValue(transaction);
 
     await expect(
-      service.transferToUserMainWallet('user-1', 'friend@example.com', 30000),
+      service.transferToUserMainWallet('user-1', {
+        toEmail: 'friend@example.com',
+        amount: '30000',
+      }),
     ).resolves.toEqual({
       fromWallet: {
         ...updatedSenderMainWallet,
@@ -330,7 +339,10 @@ describe('WalletService', () => {
       .mockResolvedValueOnce(transferTransaction);
 
     await expect(
-      service.transferToUserMainWallet('user-1', 'friend@example.com', 25000),
+      service.transferToUserMainWallet('user-1', {
+        toEmail: 'friend@example.com',
+        amount: '25000',
+      }),
     ).resolves.toEqual({
       fromWallet: {
         ...updatedSenderMainWallet,
@@ -414,7 +426,10 @@ describe('WalletService', () => {
     });
 
     await expect(
-      service.transferToUserMainWallet('user-1', 'friend@example.com', 25000),
+      service.transferToUserMainWallet('user-1', {
+        toEmail: 'friend@example.com',
+        amount: '25000',
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -426,7 +441,10 @@ describe('WalletService', () => {
     });
 
     await expect(
-      service.transferToUserMainWallet('user-1', 'me@example.com', 1000),
+      service.transferToUserMainWallet('user-1', {
+        toEmail: 'me@example.com',
+        amount: '1000',
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 

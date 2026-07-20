@@ -38,8 +38,8 @@ describe('SessionAuthGuard', () => {
         getRequest: () => request,
         getResponse: () => response,
       }),
-      switchToRpc: () => ({} as any),
-      switchToWs: () => ({} as any),
+      switchToRpc: () => ({}) as any,
+      switchToWs: () => ({}) as any,
     }) as unknown as ExecutionContext;
 
   it('throws when the session cookie is missing', async () => {

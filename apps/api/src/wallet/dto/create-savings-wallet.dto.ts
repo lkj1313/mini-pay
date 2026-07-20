@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, Min, ValidateIf } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  Matches,
+  ValidateIf,
+} from 'class-validator';
 
 const SAVINGS_PRODUCT_TYPES = {
   FREE: 'FREE',
@@ -19,10 +25,10 @@ export class CreateSavingsWalletDto {
 
   @ApiPropertyOptional({
     description: '정기 적금일 때 매일 자동 이체할 금액',
-    example: 10000,
+    example: '10000',
   })
   @ValidateIf((dto: CreateSavingsWalletDto) => dto.productType === 'FIXED')
-  @IsInt()
-  @Min(1)
-  autoTransferAmount?: number;
+  @IsString()
+  @Matches(/^\d+$/, { message: '금액은 0 이상의 정수여야 합니다.' })
+  autoTransferAmount?: string;
 }

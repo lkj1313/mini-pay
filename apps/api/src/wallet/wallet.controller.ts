@@ -1,10 +1,6 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import {
-  ApiCookieAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SESSION_COOKIE_NAME } from '../auth/auth.constants';
 import { CreateSavingsWalletDto } from './dto/create-savings-wallet.dto';
 import { DepositMainWalletDto } from './dto/deposit-main-wallet.dto';
@@ -30,7 +26,7 @@ export class WalletController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: DepositMainWalletDto,
   ) {
-    return this.walletService.depositToMainWallet(req.user.id, dto.amount);
+    return this.walletService.depositToMainWallet(req.user.id, dto);
   }
 
   @ApiOperation({ summary: '메인 계좌에서 적금 계좌로 이체' })
@@ -39,7 +35,7 @@ export class WalletController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: TransferToSavingsDto,
   ) {
-    return this.walletService.transferMainToSavings(req.user.id, dto.amount);
+    return this.walletService.transferMainToSavings(req.user.id, dto);
   }
 
   @ApiOperation({ summary: '다른 사용자 메인 계좌로 송금' })
@@ -48,11 +44,7 @@ export class WalletController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: TransferToUserDto,
   ) {
-    return this.walletService.transferToUserMainWallet(
-      req.user.id,
-      dto.toEmail,
-      dto.amount,
-    );
+    return this.walletService.transferToUserMainWallet(req.user.id, dto);
   }
 
   @ApiOperation({ summary: '적금 계좌 생성' })
@@ -61,7 +53,10 @@ export class WalletController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: CreateSavingsWalletDto,
   ) {
-    const wallet = await this.walletService.createSavingsWallet(req.user.id, dto);
+    const wallet = await this.walletService.createSavingsWallet(
+      req.user.id,
+      dto,
+    );
 
     return { wallet };
   }

@@ -32,7 +32,7 @@ export const createSavingsWalletSchema = z
       return;
     }
 
-    if (Number(normalizedAmount) < 1) {
+    if (BigInt(normalizedAmount) < BigInt(1)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['autoTransferAmount'],

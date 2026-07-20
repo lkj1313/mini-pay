@@ -80,7 +80,7 @@ describe('TransferToUserForm', () => {
       expect(mockTransferToUser).toHaveBeenCalledTimes(1);
       expect(mockTransferToUser.mock.calls[0]?.[0]).toEqual({
         toEmail: 'friend@example.com',
-        amount: 50000,
+        amount: '50000',
       });
       expect(mockInvalidateQueries).toHaveBeenCalledWith({
         queryKey: ['wallets', 'me'],
