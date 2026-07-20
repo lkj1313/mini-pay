@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsInt, Min } from 'class-validator';
+import { IsEmail, IsString, Matches } from 'class-validator';
 
 export class TransferToUserDto {
   @ApiProperty({
@@ -10,10 +10,10 @@ export class TransferToUserDto {
   toEmail!: string;
 
   @ApiProperty({
-    example: 20000,
+    example: '20000',
     description: '상대 메인 계좌로 보낼 금액',
   })
-  @IsInt()
-  @Min(1)
-  amount!: number;
+  @IsString()
+  @Matches(/^\d+$/, { message: '금액은 0 이상의 정수여야 합니다.' })
+  amount!: string;
 }

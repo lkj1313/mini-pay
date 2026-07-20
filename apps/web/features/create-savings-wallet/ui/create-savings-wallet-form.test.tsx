@@ -80,7 +80,7 @@ describe('CreateSavingsWalletForm', () => {
         1,
         {
           productType: 'FIXED',
-          autoTransferAmount: 10000,
+          autoTransferAmount: '10000',
         },
         expect.anything(),
       );

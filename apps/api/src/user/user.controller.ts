@@ -1,9 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import {
-  ApiCookieAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SESSION_COOKIE_NAME } from '../auth/auth.constants';
 import { Public } from '../common/decorators/public.decorator';
 import { UserService } from './user.service';

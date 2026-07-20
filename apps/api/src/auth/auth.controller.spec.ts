@@ -62,6 +62,10 @@ describe('AuthController', () => {
         email: 'user@example.com',
         name: 'User',
       },
+      session: {
+        idleTtlSeconds: 600,
+        expiresAt: expect.any(String),
+      },
     });
     expect(res.cookie).toHaveBeenCalledWith(
       'session_id',
@@ -84,6 +88,10 @@ describe('AuthController', () => {
         id: 'user-1',
         email: 'user@example.com',
         name: 'User',
+      },
+      session: {
+        idleTtlSeconds: 600,
+        expiresAt: expect.any(String),
       },
     });
   });

@@ -74,8 +74,8 @@ describe('TransferToSavingsForm', () => {
 
     await waitFor(() => {
       expect(mockTransferToSavings).toHaveBeenCalledTimes(1);
-      expect(mockTransferToSavings).toHaveBeenNthCalledWith(1, {
-        amount: 50000,
+      expect(mockTransferToSavings.mock.calls[0]?.[0]).toEqual({
+        amount: '50000',
       });
       expect(mockInvalidateQueries).toHaveBeenCalledWith({
         queryKey: ['wallets', 'me'],

@@ -45,7 +45,9 @@ describe('SavingsAutoTransferService', () => {
       ],
     }).compile();
 
-    service = module.get<SavingsAutoTransferService>(SavingsAutoTransferService);
+    service = module.get<SavingsAutoTransferService>(
+      SavingsAutoTransferService,
+    );
 
     prisma.$transaction.mockImplementation(async (callback: any) =>
       callback({

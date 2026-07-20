@@ -55,11 +55,8 @@ export class SavingsAutoTransferService {
           return 'skipped';
         }
 
-        const {
-          autoTransferAmount,
-          lastAutoTransferAt,
-          productType,
-        } = currentSavingsWallet.savingsDetail;
+        const { autoTransferAmount, lastAutoTransferAt, productType } =
+          currentSavingsWallet.savingsDetail;
 
         if (productType !== 'FIXED' || !autoTransferAmount) {
           return 'skipped';

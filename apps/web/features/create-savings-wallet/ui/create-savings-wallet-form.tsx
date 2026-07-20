@@ -54,7 +54,7 @@ export function CreateSavingsWalletForm({
       productType: values.productType,
       autoTransferAmount:
         values.productType === 'FIXED'
-          ? Number(values.autoTransferAmount)
+          ? values.autoTransferAmount
           : undefined,
     });
 
